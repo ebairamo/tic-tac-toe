@@ -28,3 +28,10 @@ type Move struct {
 	Row int `json:"row"`
 	Col int `json:"col"`
 }
+
+type NicknameResponse struct {
+	Nickname    string `json:"nickname"`
+	PlayerId    int    `json:"gamerId"`
+	UsersOnline int    `json:"usersOnline"`
+	GamesOnline int    `json:"gamesOnline"`
+}

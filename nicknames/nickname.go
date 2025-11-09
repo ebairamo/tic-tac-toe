@@ -5,6 +5,12 @@ import (
 	"math/rand"
 )
 
+var AvailableNicknames map[string]bool
+
+func InitNicknames() {
+	AvailableNicknames = GenerateNicknames()
+}
+
 func GenerateNicknames() map[string]bool {
 	var firstPart []string = []string{
 		"Чёрный", "Белый", "Красный", "Синий", "Золотой",
@@ -48,5 +54,5 @@ func GetRandomNickname(nickNames map[string]bool) (string, error) {
 }
 
 func ReleaseNickname() error {
-
+	return nil
 }

@@ -33,11 +33,9 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 }
 
 func ProcessMessage(msg models.Message) error {
-	
-	if msg.Action == "quickgame"{
-		var gamer models.Gamer
 
-		gameMemory.SearchingGamers[msg.PlayerId] =
+	if msg.Action == "quickgame" {
+
 	}
 	return nil
 }
