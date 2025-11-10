@@ -53,32 +53,112 @@
             color: #4CAF50;
             margin: 10px 0;
         }
+        .game-screen {
+            display: none;
+            margin-top: 30px;
+        }
+        .game-screen.active {
+            display: block;
+        }
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            font-size: 16px;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-gap: 5px;
+            margin: 20px auto;
+            background: #ddd;
+            padding: 5px;
+        }
+        .cell {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border: none;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .cell:hover {
+            background: #f0f0f0;
+        }
+        .cell.x {
+            color: #2196F3;
+        }
+        .cell.o {
+            color: #f44336;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🎮 Крестики-Нолики Online</h1>
         
-        <div class="info">
-            <p>Твой ник: <strong id="nickname">Загружаю...</strong></p>
-            <p>Твой ID: <strong id="playerId">-</strong></p>
+        <!-- Главное меню -->
+        <div id="mainMenu" class="main-menu">
+            <div class="info">
+                <p>Твой ник: <strong id="nickname">Загружаю...</strong></p>
+                <p>Твой ID: <strong id="playerId">-</strong></p>
+            </div>
+            
+            <div class="stats">
+                <p>Людей онлайн: <strong id="usersOnline">0</strong></p>
+                <p>Активных игр: <strong id="gamesOnline">0</strong></p>
+            </div>
+            
+            <button onclick="getNickname()">Получить ник</button>
+            <button onclick="startQuickGame()">🚀 Quick Game</button>
+            
+            <div id="gameStatus"></div>
         </div>
-        
-        <div class="stats">
-            <p>Людей онлайн: <strong id="usersOnline">0</strong></p>
-            <p>Активных игр: <strong id="gamesOnline">0</strong></p>
+
+        <!-- Экран игры -->
+        <div id="gameScreen" class="game-screen">
+            <h2>🎮 Игра началась!</h2>
+            
+            <div class="game-info">
+                <div>
+                    <p>Ты: <strong id="playerSymbol">X</strong></p>
+                    <p id="playerName">-</p>
+                </div>
+                <div>
+                    <p>Противник: <strong id="enemySymbol">O</strong></p>
+                    <p id="enemyName">-</p>
+                </div>
+            </div>
+
+            <div class="board" id="board">
+                <button class="cell" onclick="makeMove(0)"></button>
+                <button class="cell" onclick="makeMove(1)"></button>
+                <button class="cell" onclick="makeMove(2)"></button>
+                <button class="cell" onclick="makeMove(3)"></button>
+                <button class="cell" onclick="makeMove(4)"></button>
+                <button class="cell" onclick="makeMove(5)"></button>
+                <button class="cell" onclick="makeMove(6)"></button>
+                <button class="cell" onclick="makeMove(7)"></button>
+                <button class="cell" onclick="makeMove(8)"></button>
+            </div>
+
+            <p id="turnInfo">Твой ход</p>
+            <button onclick="backToMenu()">← Вернуться в меню</button>
         </div>
-        
-        <button onclick="getNickname()">Получить ник</button>
-        <button onclick="startQuickGame()">🚀 Quick Game</button>
-        
-        <div id="gameStatus"></div>
     </div>
 
     <script>
         let playerId = null;
         let nickname = null;
         let conn = null;
+        let yourSymbol = null;
+        let enemyName = null;
+        let board = ['', '', '', '', '', '', '', '', ''];
+        let currentTurn = 'X'; // X ходит первым
 
         // Получить ник от сервера
         async function getNickname() {
@@ -108,7 +188,6 @@
                 return;
             }
             
-            // Подключаемся к WebSocket
             const wsUrl = `ws://localhost:8000/ws?playerId=${playerId}`;
             conn = new WebSocket(wsUrl);
             
@@ -116,7 +195,6 @@
                 console.log('WebSocket подключен');
                 document.getElementById('gameStatus').textContent = '⏳ Ищу соперника...';
                 
-                // Отправляем запрос на поиск
                 const message = {
                     action: 'quickgame',
                     playerId: playerId,
@@ -130,9 +208,20 @@
                 console.log('Получено сообщение:', data);
                 
                 if (data.gameId) {
-                    document.getElementById('gameStatus').textContent = 
-                        `✅ Матч найден! Game ID: ${data.gameId}, Твой символ: ${data.yourSymbol}`;
-                    console.log('Enemy:', data.enemy);
+                    // Матч найден!
+                    yourSymbol = data.yourSymbol;
+                    enemyName = data.enemy.Name;
+                    
+                    // Показываем информацию на экране игры
+                    document.getElementById('playerSymbol').textContent = yourSymbol;
+                    document.getElementById('playerName').textContent = nickname;
+                    document.getElementById('enemySymbol').textContent = data.enemy.Symbol;
+                    document.getElementById('enemyName').textContent = enemyName;
+                    
+                    // Переходим на экран игры
+                    showGameScreen();
+                    
+                    console.log('Матч найден! Символ:', yourSymbol);
                 }
             };
             
@@ -144,6 +233,66 @@
             conn.onclose = () => {
                 console.log('WebSocket закрыт');
             };
+        }
+
+        // Показать экран игры
+        function showGameScreen() {
+            document.getElementById('mainMenu').style.display = 'none';
+            document.getElementById('gameScreen').classList.add('active');
+            resetBoard();
+        }
+
+        // Вернуться в меню
+        function backToMenu() {
+            document.getElementById('gameScreen').classList.remove('active');
+            document.getElementById('mainMenu').style.display = 'block';
+            if (conn) {
+                conn.close();
+            }
+            resetBoard();
+        }
+
+        // Сделать ход
+        function makeMove(index) {
+            if (board[index] === '') {
+                board[index] = yourSymbol;
+                updateBoard();
+                
+                // Смена хода (пока только на фронте, без отправки на сервер)
+                currentTurn = currentTurn === 'X' ? 'O' : 'X';
+                updateTurnInfo();
+            }
+        }
+
+        // Обновить визуальное поле
+        function updateBoard() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach((cell, index) => {
+                cell.textContent = board[index];
+                cell.classList.remove('x', 'o');
+                if (board[index] === 'X') {
+                    cell.classList.add('x');
+                } else if (board[index] === 'O') {
+                    cell.classList.add('o');
+                }
+            });
+        }
+
+        // Обновить информацию о ходе
+        function updateTurnInfo() {
+            if (currentTurn === yourSymbol) {
+                document.getElementById('turnInfo').textContent = '✋ Твой ход';
+            } else {
+                document.getElementById('turnInfo').textContent = '⏳ Ход противника';
+            }
+        }
+
+        // Сбросить доску
+        function resetBoard() {
+            board = ['', '', '', '', '', '', '', '', ''];
+            currentTurn = 'X';
+            updateBoard();
+            updateTurnInfo();
         }
 
         // Загружаем ник при загрузке страницы

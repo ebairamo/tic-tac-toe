@@ -50,6 +50,10 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 func ProcessMessage(msg models.Message) error {
 
 	if msg.Action == "quickgame" {
+		if _, exists := game.GameMemory.SearchingGamers[msg.PlayerId]; exists {
+			return fmt.Errorf("ты уже ищешь соперника")
+		}
+
 		gamer := models.Gamer{
 			ID:   msg.PlayerId,
 			Name: msg.Nickname,
@@ -66,8 +70,8 @@ func ProcessMessage(msg models.Message) error {
 					player1.Symbol = "X"
 
 					count++
-				}
-				if count == 1 {
+
+				} else if count == 1 {
 					player2 = gamer
 					id2 = id
 					player2.Symbol = "O"
@@ -95,7 +99,11 @@ func ProcessMessage(msg models.Message) error {
 			messagePlayer1 := models.MessageGameFound{
 				GameId:     gameId,
 				YourSymbol: "X",
-				Enemy:      player2,
+				Enemy: models.Gamer{
+					ID:     id2,
+					Name:   player2.Name,
+					Symbol: "O",
+				},
 			}
 			err = player1conn.WriteJSON(messagePlayer1)
 			if err != nil {
@@ -109,9 +117,15 @@ func ProcessMessage(msg models.Message) error {
 			messagePlayer2 := models.MessageGameFound{
 				GameId:     gameId,
 				YourSymbol: "O",
-				Enemy:      player1,
+				Enemy: models.Gamer{
+					ID:     id1,
+					Name:   player1.Name,
+					Symbol: "X",
+				},
 			}
 			err = player2conn.WriteJSON(messagePlayer2)
+			fmt.Println("✉️ Отправлено игроку 1 (ID:", id1, ")")
+			fmt.Println("✉️ Отправлено игроку 2 (ID:", id2, ")")
 			if err != nil {
 				fmt.Println("ошибка отправки сообщения второму игроку")
 			}

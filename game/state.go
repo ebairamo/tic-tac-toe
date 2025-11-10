@@ -30,12 +30,11 @@ func InitActiveConnection() {
 }
 
 func AddActiveConnection(id int, conn *websocket.Conn) error {
-
-	if conn != nil {
-		activeConnections[id] = conn
-	} else {
-		return fmt.Errorf("ошибка conn пустой нет соединения")
+	if conn == nil {
+		return fmt.Errorf("соединение пусто")
 	}
+	fmt.Println("✅ Добавлено соединение для игрока", id) // ← ДОБ АВЬ
+	activeConnections[id] = conn
 	return nil
 }
 

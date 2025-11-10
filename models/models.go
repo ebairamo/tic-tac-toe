@@ -32,7 +32,7 @@ type Move struct {
 
 type NicknameResponse struct {
 	Nickname    string `json:"nickname"`
-	PlayerId    int    `json:"gamerId"`
+	PlayerId    int    `json:"playerId"`
 	UsersOnline int    `json:"usersOnline"`
 	GamesOnline int    `json:"gamesOnline"`
 }
