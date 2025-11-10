@@ -28,7 +28,6 @@ func GenerateNicknames() map[string]bool {
 			nick := firstPart[i] + " " + secondPart[j]
 			result[nick] = true
 		}
-
 	}
 	return result
 }
@@ -36,7 +35,7 @@ func GenerateNicknames() map[string]bool {
 func GetRandomNickname(nickNames map[string]bool) (string, error) {
 	var freeNicks []string
 	for nick, isFree := range nickNames {
-		if isFree == true {
+		if isFree {
 			freeNicks = append(freeNicks, nick)
 		}
 	}
@@ -48,9 +47,6 @@ func GetRandomNickname(nickNames map[string]bool) (string, error) {
 	nickName := freeNicks[randomNumber]
 	nickNames[nickName] = false
 	return nickName, nil
-	// Находим свободный ник
-	// Отмечаем как занятый
-	// Возвращаем ник (и может быть ошибку)
 }
 
 func ReleaseNickname() error {

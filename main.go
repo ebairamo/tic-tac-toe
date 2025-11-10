@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"tic/game"
 	"tic/handlers"
+
 	"tic/models"
 	"tic/nicknames"
 	"time"
@@ -17,6 +18,7 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 	nicknames.InitNicknames()
 	game.InitGameMemory()
+	game.InitActiveConnection()
 
 	http.HandleFunc("/ws", handlers.HandleWebSocket)
 	http.HandleFunc("/api/nickname", handlers.HandleGetNickname)

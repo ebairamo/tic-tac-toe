@@ -8,7 +8,7 @@ type Gamer struct {
 
 type Game struct {
 	ID      int
-	grid    [3][3]string
+	Grid    [3][3]string
 	Player1 Gamer
 	Player2 Gamer
 }
@@ -21,6 +21,7 @@ type GameMemory struct {
 type Message struct {
 	Action   string `json:"action"`
 	PlayerId int    `json:"playerId"`
+	Nickname string `json:"nickname"`
 	Move     *Move  `json:"move,omitempty"`
 }
 
