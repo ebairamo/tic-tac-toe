@@ -36,3 +36,9 @@ type NicknameResponse struct {
 	UsersOnline int    `json:"usersOnline"`
 	GamesOnline int    `json:"gamesOnline"`
 }
+
+type MessageGameFound struct {
+	GameId     int    `json:"gameId"`
+	YourSymbol string `json:"yourSymbol"`
+	Enemy      Gamer  `json:"enemy"`
+}

@@ -87,6 +87,34 @@ func ProcessMessage(msg models.Message) error {
 			delete(game.GameMemory.SearchingGamers, id1)
 			delete(game.GameMemory.SearchingGamers, id2)
 			game.GameMemory.ActiveGames[gameId] = matchedGame
+			player1conn, err := game.GetActiveConnection(id1)
+			if err != nil {
+				fmt.Println("ошибка получения соединеня первого игрока")
+				return err
+			}
+			messagePlayer1 := models.MessageGameFound{
+				GameId:     gameId,
+				YourSymbol: "X",
+				Enemy:      player2,
+			}
+			err = player1conn.WriteJSON(messagePlayer1)
+			if err != nil {
+				fmt.Println("ошибка отправки сообщения первому игроку")
+			}
+			player2conn, err := game.GetActiveConnection(id2)
+			if err != nil {
+				fmt.Println("ошибка получения соединеня второго игрока")
+				return err
+			}
+			messagePlayer2 := models.MessageGameFound{
+				GameId:     gameId,
+				YourSymbol: "O",
+				Enemy:      player1,
+			}
+			err = player2conn.WriteJSON(messagePlayer2)
+			if err != nil {
+				fmt.Println("ошибка отправки сообщения второму игроку")
+			}
 		}
 
 	}
