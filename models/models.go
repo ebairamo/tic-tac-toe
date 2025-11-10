@@ -7,10 +7,11 @@ type Gamer struct {
 }
 
 type Game struct {
-	ID      int
-	Grid    [3][3]string
-	Player1 Gamer
-	Player2 Gamer
+	ID          int
+	Grid        [3][3]string
+	Player1     Gamer
+	Player2     Gamer
+	CurrentTurn string
 }
 
 type GameMemory struct {
