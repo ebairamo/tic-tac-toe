@@ -22,5 +22,6 @@ func main() {
 
 	http.HandleFunc("/ws", handlers.HandleWebSocket)
 	http.HandleFunc("/api/nickname", handlers.HandleGetNickname)
+	http.Handle("/", http.FileServer(http.Dir("static")))
 	http.ListenAndServe(":8000", nil)
 }

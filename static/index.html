@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Крестики-Нолики Online</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: #f0f0f0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+        }
+        .info {
+            margin: 20px 0;
+            padding: 10px;
+            background: #e3f2fd;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px 5px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #0b7dda;
+        }
+        .stats {
+            margin: 20px 0;
+            font-size: 18px;
+        }
+        #gameStatus {
+            font-size: 20px;
+            font-weight: bold;
+            color: #4CAF50;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Крестики-Нолики Online</h1>
+        
+        <div class="info">
+            <p>Твой ник: <strong id="nickname">Загружаю...</strong></p>
+            <p>Твой ID: <strong id="playerId">-</strong></p>
+        </div>
+        
+        <div class="stats">
+            <p>Людей онлайн: <strong id="usersOnline">0</strong></p>
+            <p>Активных игр: <strong id="gamesOnline">0</strong></p>
+        </div>
+        
+        <button onclick="getNickname()">Получить ник</button>
+        <button onclick="startQuickGame()">🚀 Quick Game</button>
+        
+        <div id="gameStatus"></div>
+    </div>
+
+    <script>
+        let playerId = null;
+        let nickname = null;
+        let conn = null;
+
+        // Получить ник от сервера
+        async function getNickname() {
+            try {
+                const response = await fetch('/api/nickname');
+                const data = await response.json();
+                
+                playerId = data.playerId;
+                nickname = data.nickname;
+                
+                document.getElementById('playerId').textContent = playerId;
+                document.getElementById('nickname').textContent = nickname;
+                document.getElementById('usersOnline').textContent = data.usersOnline;
+                document.getElementById('gamesOnline').textContent = data.gamesOnline;
+                
+                console.log('Ник получен:', data);
+            } catch (error) {
+                console.error('Ошибка:', error);
+                alert('Ошибка получения ника');
+            }
+        }
+
+        // Подключиться к WebSocket и начать Quick Game
+        function startQuickGame() {
+            if (!playerId) {
+                alert('Сначала получи ник!');
+                return;
+            }
+            
+            // Подключаемся к WebSocket
+            const wsUrl = `ws://localhost:8000/ws?playerId=${playerId}`;
+            conn = new WebSocket(wsUrl);
+            
+            conn.onopen = () => {
+                console.log('WebSocket подключен');
+                document.getElementById('gameStatus').textContent = '⏳ Ищу соперника...';
+                
+                // Отправляем запрос на поиск
+                const message = {
+                    action: 'quickgame',
+                    playerId: playerId,
+                    nickname: nickname
+                };
+                conn.send(JSON.stringify(message));
+            };
+            
+            conn.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                console.log('Получено сообщение:', data);
+                
+                if (data.gameId) {
+                    document.getElementById('gameStatus').textContent = 
+                        `✅ Матч найден! Game ID: ${data.gameId}, Твой символ: ${data.yourSymbol}`;
+                    console.log('Enemy:', data.enemy);
+                }
+            };
+            
+            conn.onerror = (error) => {
+                console.error('WebSocket ошибка:', error);
+                document.getElementById('gameStatus').textContent = '❌ Ошибка соединения';
+            };
+            
+            conn.onclose = () => {
+                console.log('WebSocket закрыт');
+            };
+        }
+
+        // Загружаем ник при загрузке страницы
+        window.onload = () => {
+            getNickname();
+        };
+    </script>
+</body>
+</html>
