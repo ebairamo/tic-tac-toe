@@ -131,6 +131,9 @@ func ProcessMessage(msg models.Message) error {
 			}
 		}
 
+	} else if msg.Action == "move" {
+		fmt.Println("🎮 Ход от игрока", msg.PlayerId, "на позицию", msg.Move.Row, msg.Move.Col)
 	}
+	fmt.Println("✅ ProcessMessage завершена успешно")
 	return nil
 }

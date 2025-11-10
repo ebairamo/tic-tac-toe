@@ -253,16 +253,30 @@
         }
 
         // Сделать ход
-        function makeMove(index) {
-            if (board[index] === '') {
-                board[index] = yourSymbol;
-                updateBoard();
-                
-                // Смена хода (пока только на фронте, без отправки на сервер)
-                currentTurn = currentTurn === 'X' ? 'O' : 'X';
-                updateTurnInfo();
+       function makeMove(index) {
+    if (board[index] === '') {
+        board[index] = yourSymbol;
+        updateBoard();
+        
+        // Конвертируем индекс в Row и Col
+        let row = Math.floor(index / 3);
+        let col = index % 3;
+        
+        // Отправляем ход на сервер
+        let moveMessage = {
+            action: 'move',
+            playerId: playerId,
+            move: {
+                row: row,
+                col: col
             }
-        }
+        };
+        conn.send(JSON.stringify(moveMessage));
+        
+        currentTurn = currentTurn === 'X' ? 'O' : 'X';
+        updateTurnInfo();
+    }
+}
 
         // Обновить визуальное поле
         function updateBoard() {
