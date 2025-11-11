@@ -134,9 +134,74 @@ func ProcessMessage(msg models.Message) error {
 	} else if msg.Action == "move" {
 		err := game.ValidateMove(msg.GameId, msg.PlayerId, msg.Move.Row, msg.Move.Col)
 		if err != nil {
+			return err
 		}
+		winner := CheckWin(msg.GameId)
+		if winner != "" {
+			fmt.Println(winner + "winer")
+		}
+
+		SendBoardUpdate(msg.GameId, winner)
 		fmt.Println("🎮 Ход от игрока", msg.PlayerId, "на позицию", msg.Move.Row, msg.Move.Col)
 	}
 	fmt.Println("✅ ProcessMessage завершена успешно")
 	return nil
+}
+
+func SendBoardUpdate(gameId int, winner string) error {
+	thisGame := game.GameMemory.ActiveGames[gameId]
+	BoardUpdate := models.BoardUpdate{
+		GameId:      thisGame.ID,
+		Grid:        thisGame.Grid,
+		CurrentTurn: thisGame.CurrentTurn,
+		GameStatus:  "playing",
+		Winner:      winner,
+	}
+
+	player1Conn, err := game.GetActiveConnection(thisGame.Player1.ID)
+	if err != nil {
+		fmt.Errorf("ошибка получения соединения первого игрока")
+		return err
+	}
+	player2Conn, err := game.GetActiveConnection(thisGame.Player2.ID)
+	if err != nil {
+		fmt.Errorf("ошибка получения соединения второго игрока")
+		return err
+	}
+	err = player1Conn.WriteJSON(BoardUpdate)
+	if err != nil {
+		fmt.Errorf("ошибка отправления Json первому игроку")
+		return err
+	}
+	err = player2Conn.WriteJSON(BoardUpdate)
+	if err != nil {
+		fmt.Errorf("ошибка отправления Json второму игроку")
+		return err
+	}
+	return nil
+}
+
+func CheckWin(gameId int) string {
+	g := game.GameMemory.ActiveGames[gameId]
+	patterns := [8][3][2]int{
+		{{0, 0}, {0, 1}, {0, 2}}, // горизонталь 1
+		{{1, 0}, {1, 1}, {1, 2}}, // горизонталь 2
+		{{2, 0}, {2, 1}, {2, 2}}, // горизонталь 3
+		{{0, 0}, {1, 0}, {2, 0}}, // вертикаль 1
+		{{0, 1}, {1, 1}, {2, 1}}, // вертикаль 2
+		{{0, 2}, {1, 2}, {2, 2}}, // вертикаль 3
+		{{0, 0}, {1, 1}, {2, 2}}, // диагональ 1
+		{{0, 2}, {1, 1}, {2, 0}}, // диагональ 2
+	}
+
+	for _, pattern := range patterns {
+		a := g.Grid[pattern[0][0]][pattern[0][1]]
+		b := g.Grid[pattern[1][0]][pattern[1][1]]
+		c := g.Grid[pattern[2][0]][pattern[2][1]]
+
+		if a != "" && a == b && b == c {
+			return a // возвращаем "X" или "O"
+		}
+	}
+	return "" // нет выигрыша
 }

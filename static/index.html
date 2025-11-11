@@ -208,23 +208,32 @@
                 const data = JSON.parse(event.data);
                 console.log('Получено сообщение:', data);
                 
-                if (data.gameId) {
-                     gameId = data.gameId;  // ← СОХРАНИ GameId
-                    // Матч найден!
-                    yourSymbol = data.yourSymbol;
-                    enemyName = data.enemy.Name;
-                    
-                    // Показываем информацию на экране игры
-                    document.getElementById('playerSymbol').textContent = yourSymbol;
-                    document.getElementById('playerName').textContent = nickname;
-                    document.getElementById('enemySymbol').textContent = data.enemy.Symbol;
-                    document.getElementById('enemyName').textContent = enemyName;
-                    
-                    // Переходим на экран игры
-                    showGameScreen();
-                    
-                    console.log('Матч найден! Символ:', yourSymbol);
-                }
+                if (data.gameId && data.enemy) {
+    // Матч найден!
+    gameId = data.gameId;
+    yourSymbol = data.yourSymbol;
+    enemyName = data.enemy.Name;
+    
+    // Показываем информацию на экране игры
+    document.getElementById('playerSymbol').textContent = yourSymbol;
+    document.getElementById('playerName').textContent = nickname;
+    document.getElementById('enemySymbol').textContent = data.enemy.Symbol;
+    document.getElementById('enemyName').textContent = enemyName;
+    
+    showGameScreen();
+} else if (data.gameId && data.grid) {
+    // Обновление доски!
+    board = data.grid.flat();
+    updateBoard();
+    currentTurn = data.currentTurn;
+    updateTurnInfo();
+
+     if (data.winner) {  // ← ДОБАВЬ ЭТО
+        document.getElementById('turnInfo').textContent = 
+            `🎉 Победил: ${data.winner}!`;
+    }
+    
+}
             };
             
             conn.onerror = (error) => {
