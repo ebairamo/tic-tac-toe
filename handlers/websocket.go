@@ -124,14 +124,17 @@ func ProcessMessage(msg models.Message) error {
 				},
 			}
 			err = player2conn.WriteJSON(messagePlayer2)
-			fmt.Println("✉️ Отправлено игроку 1 (ID:", id1, ")")
-			fmt.Println("✉️ Отправлено игроку 2 (ID:", id2, ")")
+			fmt.Println("✉️ Отправлено игроку 1 (ID:", id1, player1, ")")
+			fmt.Println("✉️ Отправлено игроку 2 (ID:", id2, player2, ")")
 			if err != nil {
 				fmt.Println("ошибка отправки сообщения второму игроку")
 			}
 		}
 
 	} else if msg.Action == "move" {
+		err := game.ValidateMove(msg.GameId, msg.PlayerId, msg.Move.Row, msg.Move.Col)
+		if err != nil {
+		}
 		fmt.Println("🎮 Ход от игрока", msg.PlayerId, "на позицию", msg.Move.Row, msg.Move.Col)
 	}
 	fmt.Println("✅ ProcessMessage завершена успешно")

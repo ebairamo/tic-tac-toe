@@ -23,6 +23,7 @@ type Message struct {
 	Action   string `json:"action"`
 	PlayerId int    `json:"playerId"`
 	Nickname string `json:"nickname"`
+	GameId   int    `json:"gameId,omitempty"`
 	Move     *Move  `json:"move,omitempty"`
 }
 

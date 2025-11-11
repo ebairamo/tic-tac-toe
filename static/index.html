@@ -153,6 +153,7 @@
 
     <script>
         let playerId = null;
+        let gameId = null;
         let nickname = null;
         let conn = null;
         let yourSymbol = null;
@@ -208,6 +209,7 @@
                 console.log('Получено сообщение:', data);
                 
                 if (data.gameId) {
+                     gameId = data.gameId;  // ← СОХРАНИ GameId
                     // Матч найден!
                     yourSymbol = data.yourSymbol;
                     enemyName = data.enemy.Name;
@@ -266,6 +268,7 @@
         let moveMessage = {
             action: 'move',
             playerId: playerId,
+            gameId: gameId,  // ← ДОБАВЬ
             move: {
                 row: row,
                 col: col
