@@ -136,26 +136,37 @@ func ProcessMessage(msg models.Message) error {
 		if err != nil {
 			return err
 		}
+
+		draw := Draw(msg.GameId)
 		winner := CheckWin(msg.GameId)
 		if winner != "" {
 			fmt.Println(winner + "winer")
-		}
 
-		SendBoardUpdate(msg.GameId, winner)
+		}
+		SendBoardUpdate(msg.GameId, winner, draw)
 		fmt.Println("🎮 Ход от игрока", msg.PlayerId, "на позицию", msg.Move.Row, msg.Move.Col)
 	}
 	fmt.Println("✅ ProcessMessage завершена успешно")
 	return nil
 }
 
-func SendBoardUpdate(gameId int, winner string) error {
+func SendBoardUpdate(gameId int, winner string, gameStatus string) error {
 	thisGame := game.GameMemory.ActiveGames[gameId]
+	var finalWinner string
+	var finalStatus string
+	if winner != "" {
+		finalStatus = "finished"
+		finalWinner = winner
+	} else if gameStatus == "draw" {
+		finalStatus = gameStatus
+
+	}
 	BoardUpdate := models.BoardUpdate{
 		GameId:      thisGame.ID,
 		Grid:        thisGame.Grid,
 		CurrentTurn: thisGame.CurrentTurn,
-		GameStatus:  "playing",
-		Winner:      winner,
+		GameStatus:  finalStatus,
+		Winner:      finalWinner,
 	}
 
 	player1Conn, err := game.GetActiveConnection(thisGame.Player1.ID)
@@ -204,4 +215,16 @@ func CheckWin(gameId int) string {
 		}
 	}
 	return "" // нет выигрыша
+}
+
+func Draw(gameId int) string {
+	g := game.GameMemory.ActiveGames[gameId]
+	for i := 0; i < 3; i++ {
+		for j := 0; j < 3; j++ {
+			if g.Grid[i][j] == "" {
+				return "playing"
+			}
+		}
+	}
+	return "draw"
 }
