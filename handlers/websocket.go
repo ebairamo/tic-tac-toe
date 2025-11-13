@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"tic/game"
 	"tic/models"
+	"tic/nicknames"
 
 	"github.com/gorilla/websocket"
 )
@@ -188,6 +189,13 @@ func SendBoardUpdate(gameId int, winner string, gameStatus string) error {
 	if err != nil {
 		fmt.Errorf("ошибка отправления Json второму игроку")
 		return err
+	}
+	if BoardUpdate.GameStatus == "finished" || BoardUpdate.GameStatus == "draw" {
+
+		player1Conn.Close()
+		player2Conn.Close()
+		delete(game.GameMemory.ActiveGames, gameId)
+		nicknames.ReleaseNickname(thisGame.Player1.Name, thisGame.Player2.Name)
 	}
 	return nil
 }

@@ -3,403 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎮 Крестики-Нолики Online</title>
+    <title>Крестики-Нолики Online</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary: #a78bfa;
-            --secondary: #e0e7ff;
-            --accent: #f97316;
-            --dark: #1e1b4b;
-            --light: #f8fafc;
-            --text: #334155;
-        }
-
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            background: linear-gradient(135deg, #f0f4ff 0%, #faf5ff 50%, #fff7ed 100%);
-            min-height: 100vh;
+            font-family: Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            min-height: 100vh;
+            margin: 0;
+            background: #f0f0f0;
         }
-
         .container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 32px;
-            border: 2px solid rgba(167, 139, 250, 0.1);
-            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.08);
-            padding: 48px;
-            max-width: 520px;
-            width: 100%;
-            animation: slideIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center;
         }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
         h1 {
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-align: center;
-            margin-bottom: 32px;
-            font-size: 2.8em;
-            font-weight: 800;
-            letter-spacing: -0.02em;
+            color: #333;
         }
-
-        h2 {
-            color: var(--dark);
-            text-align: center;
-            margin-bottom: 24px;
-            font-size: 1.5em;
-            font-weight: 700;
+        .info {
+            margin: 20px 0;
+            padding: 10px;
+            background: #e3f2fd;
+            border-radius: 5px;
         }
-
-        .info-box {
-            background: linear-gradient(135deg, var(--secondary) 0%, rgba(249, 115, 22, 0.05) 100%);
-            padding: 24px;
-            border-radius: 20px;
-            margin-bottom: 28px;
-            border: 1px solid rgba(167, 139, 250, 0.2);
-            color: var(--dark);
-        }
-
-        .info-box p {
-            margin: 12px 0;
-            font-size: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .info-box strong {
-            font-size: 18px;
-            color: var(--primary);
-            font-weight: 700;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 28px;
-        }
-
-        .stat-item {
-            background: linear-gradient(135deg, #fafafa, #ffffff);
-            padding: 20px;
-            border-radius: 16px;
-            text-align: center;
-            border: 1px solid rgba(167, 139, 250, 0.1);
-            transition: all 0.3s ease;
-        }
-
-        .stat-item:hover {
-            border-color: var(--primary);
-            background: linear-gradient(135deg, var(--secondary), #ffffff);
-            transform: translateY(-2px);
-        }
-
-        .stat-item p:first-child {
-            color: var(--primary);
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 8px;
-        }
-
-        .stat-item p:last-child {
-            color: var(--dark);
-            font-size: 28px;
-            font-weight: 800;
-        }
-
         button {
-            width: 100%;
-            padding: 14px 24px;
-            margin: 10px 0;
-            font-size: 15px;
+            padding: 10px 20px;
+            margin: 10px 5px;
+            font-size: 16px;
             cursor: pointer;
-            background: linear-gradient(135deg, var(--primary), #a855f7);
+            background: #2196F3;
             color: white;
             border: none;
-            border-radius: 14px;
-            font-weight: 700;
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 0 8px 16px rgba(167, 139, 250, 0.3);
-            position: relative;
-            overflow: hidden;
+            border-radius: 5px;
         }
-
-        button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.2);
-            transition: left 0.3s;
-        }
-
-        button:hover::before {
-            left: 100%;
-        }
-
         button:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 24px rgba(167, 139, 250, 0.4);
+            background: #0b7dda;
         }
-
-        button:active {
-            transform: translateY(-2px);
-        }
-
-        #gameStatus {
-            font-size: 16px;
-            font-weight: 600;
-            text-align: center;
+        .stats {
             margin: 20px 0;
-            padding: 14px 18px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #fef3c7, #fde68a);
-            color: #78350f;
-            border: 1px solid rgba(177, 127, 34, 0.2);
+            font-size: 18px;
         }
-
+        #gameStatus {
+            font-size: 20px;
+            font-weight: bold;
+            color: #4CAF50;
+            margin: 10px 0;
+        }
         .game-screen {
             display: none;
+            margin-top: 30px;
         }
-
         .game-screen.active {
             display: block;
-            animation: slideIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-
         .game-info {
             display: flex;
             justify-content: space-around;
-            align-items: center;
-            margin: 24px 0;
-            padding: 24px;
-            background: linear-gradient(135deg, var(--secondary), rgba(249, 115, 22, 0.05));
-            border-radius: 20px;
-            border: 1px solid rgba(167, 139, 250, 0.15);
+            margin: 20px 0;
+            font-size: 16px;
         }
-
-        .player-info {
-            text-align: center;
-        }
-
-        .player-info p:first-child {
-            font-size: 12px;
-            color: var(--primary);
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 8px;
-        }
-
-        .symbol {
-            font-size: 48px;
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin: 12px 0;
-        }
-
-        .player-info p:last-child {
-            color: var(--dark);
-            font-weight: 700;
-            font-size: 15px;
-        }
-
-        .vs-text {
-            color: var(--primary);
-            font-size: 24px;
-            font-weight: 800;
-        }
-
         .board {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-gap: 12px;
-            margin: 32px auto;
-            background: linear-gradient(135deg, var(--secondary), rgba(249, 115, 22, 0.05));
-            padding: 14px;
-            border-radius: 20px;
-            width: fit-content;
-            box-shadow: 0 12px 32px rgba(167, 139, 250, 0.15);
-            border: 1px solid rgba(167, 139, 250, 0.1);
+            grid-template-columns: repeat(3, 100px);
+            grid-gap: 5px;
+            margin: 20px auto;
+            background: #ddd;
+            padding: 5px;
         }
-
         .cell {
-            width: 90px;
-            height: 90px;
+            width: 100px;
+            height: 100px;
             background: white;
-            border: 2px solid rgba(167, 139, 250, 0.1);
-            border-radius: 14px;
-            font-size: 38px;
-            font-weight: 800;
+            border: none;
+            font-size: 32px;
+            font-weight: bold;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
-
-        .cell:hover:empty {
-            border-color: var(--primary);
-            background: var(--secondary);
-            transform: scale(1.05);
+        .cell:hover {
+            background: #f0f0f0;
         }
-
-        .cell:active {
-            transform: scale(0.98);
-        }
-
         .cell.x {
-            color: var(--primary);
+            color: #2196F3;
         }
-
         .cell.o {
-            color: var(--accent);
-        }
-
-        #turnInfo {
-            text-align: center;
-            font-size: 16px;
-            font-weight: 700;
-            color: white;
-            margin: 20px 0;
-            padding: 16px;
-            background: linear-gradient(135deg, var(--primary), #a855f7);
-            border-radius: 14px;
-            border: none;
-            box-shadow: 0 8px 16px rgba(167, 139, 250, 0.3);
-        }
-
-        #resultScreen {
-            text-align: center;
-        }
-
-        #resultTitle {
-            font-size: 2em;
-            margin-bottom: 20px;
-            color: var(--dark);
-        }
-
-        #resultMessage {
-            font-size: 32px;
-            margin: 32px 0;
-            padding: 24px;
-            background: linear-gradient(135deg, var(--secondary), rgba(249, 115, 22, 0.05));
-            border-radius: 20px;
-            color: var(--primary);
-            font-weight: 800;
-            border: 2px solid var(--primary);
-        }
-
-        .button-group {
-            display: flex;
-            gap: 12px;
-            margin-top: 24px;
-        }
-
-        .button-group button {
-            flex: 1;
-            margin: 0;
-        }
-
-        @media (max-width: 600px) {
-            .container {
-                padding: 28px;
-                border-radius: 24px;
-            }
-
-            h1 {
-                font-size: 2.2em;
-                margin-bottom: 24px;
-            }
-
-            .cell {
-                width: 75px;
-                height: 75px;
-                font-size: 32px;
-            }
-
-            .game-info {
-                gap: 12px;
-            }
-
-            .symbol {
-                font-size: 36px;
-            }
-
-            button {
-                padding: 12px 18px;
-                font-size: 14px;
-            }
-
-            .board {
-                gap: 8px;
-                padding: 10px;
-            }
+            color: #f44336;
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <h1>🎮 Крестики-Нолики Online</h1>
+        
         <!-- Главное меню -->
-        <div id="mainMenu">
-            <h1>🎮 Tic Tac Toe</h1>
-            
-            <div class="info-box">
-                <p>
-                    <span>Твой ник:</span>
-                    <strong id="nickname">Загружаю...</strong>
-                </p>
-                <p>
-                    <span>ID:</span>
-                    <strong id="playerId">-</strong>
-                </p>
+        <div id="mainMenu" class="main-menu">
+            <div class="info">
+                <p>Твой ник: <strong id="nickname">Загружаю...</strong></p>
+                <p>Твой ID: <strong id="playerId">-</strong></p>
             </div>
             
             <div class="stats">
-                <div class="stat-item">
-                    <p>Онлайн</p>
-                    <p id="usersOnline">0</p>
-                </div>
-                <div class="stat-item">
-                    <p>Игр</p>
-                    <p id="gamesOnline">0</p>
-                </div>
+                <p>Людей онлайн: <strong id="usersOnline">0</strong></p>
+                <p>Активных игр: <strong id="gamesOnline">0</strong></p>
             </div>
             
-            <button onclick="getNickname()">🔄 Новый ник</button>
-            <button onclick="startQuickGame()">⚡ Быстрая игра</button>
+            <button onclick="getNickname()">Получить ник</button>
+            <button onclick="startQuickGame()">🚀 Quick Game</button>
             
             <div id="gameStatus"></div>
         </div>
@@ -409,58 +124,50 @@
             <h2>🎮 Игра началась!</h2>
             
             <div class="game-info">
-                <div class="player-info">
-                    <p>Ты</p>
-                    <div class="symbol" id="playerSymbol">X</div>
+                <div>
+                    <p>Ты: <strong id="playerSymbol">X</strong></p>
                     <p id="playerName">-</p>
                 </div>
-                <div class="vs-text">VS</div>
-                <div class="player-info">
-                    <p>Противник</p>
-                    <div class="symbol" id="enemySymbol">O</div>
+                <div>
+                    <p>Противник: <strong id="enemySymbol">O</strong></p>
                     <p id="enemyName">-</p>
                 </div>
             </div>
 
-            <div style="text-align: center;">
-                <div class="board" id="board">
-                    <button class="cell" onclick="makeMove(0)"></button>
-                    <button class="cell" onclick="makeMove(1)"></button>
-                    <button class="cell" onclick="makeMove(2)"></button>
-                    <button class="cell" onclick="makeMove(3)"></button>
-                    <button class="cell" onclick="makeMove(4)"></button>
-                    <button class="cell" onclick="makeMove(5)"></button>
-                    <button class="cell" onclick="makeMove(6)"></button>
-                    <button class="cell" onclick="makeMove(7)"></button>
-                    <button class="cell" onclick="makeMove(8)"></button>
-                </div>
+            <div class="board" id="board">
+                <button class="cell" onclick="makeMove(0)"></button>
+                <button class="cell" onclick="makeMove(1)"></button>
+                <button class="cell" onclick="makeMove(2)"></button>
+                <button class="cell" onclick="makeMove(3)"></button>
+                <button class="cell" onclick="makeMove(4)"></button>
+                <button class="cell" onclick="makeMove(5)"></button>
+                <button class="cell" onclick="makeMove(6)"></button>
+                <button class="cell" onclick="makeMove(7)"></button>
+                <button class="cell" onclick="makeMove(8)"></button>
             </div>
 
-            <div id="turnInfo">✋ Твой ход</div>
-            <button onclick="backToMenu()">← Главное меню</button>
-        </div>
-
-        <!-- Экран результата -->
-        <div id="resultScreen" class="game-screen">
-            <h2 id="resultTitle">🏆 Игра окончена!</h2>
-            <div id="resultMessage"></div>
-            <div class="button-group">
-                <button onclick="playAgain()">🔄 Ещё раз</button>
-                <button onclick="backToMenu()">← Меню</button>
-            </div>
+            <p id="turnInfo">Твой ход</p>
+            <button onclick="backToMenu()">← Вернуться в меню</button>
         </div>
     </div>
-
+    <!-- Экран результата -->
+<div id="resultScreen" class="game-screen">
+    <h2>🎉 Результат!</h2>
+    <div id="resultMessage" style="font-size: 24px; margin: 30px 0; font-weight: bold;"></div>
+    <button onclick="playAgain()">🔄 Играть ещё</button>
+    <button onclick="backToMenu()">← Главное меню</button>
+</div>
     <script>
         let playerId = null;
+        let gameId = null;
         let nickname = null;
         let conn = null;
         let yourSymbol = null;
         let enemyName = null;
-        let gameId = null;
         let board = ['', '', '', '', '', '', '', '', ''];
-        let currentTurn = 'X';
+        let currentTurn = 'X'; // X ходит первым
 
+        // Получить ник от сервера
         async function getNickname() {
             try {
                 const response = await fetch('/api/nickname');
@@ -473,12 +180,15 @@
                 document.getElementById('nickname').textContent = nickname;
                 document.getElementById('usersOnline').textContent = data.usersOnline;
                 document.getElementById('gamesOnline').textContent = data.gamesOnline;
+                
+                console.log('Ник получен:', data);
             } catch (error) {
                 console.error('Ошибка:', error);
-                alert('❌ Ошибка получения ника');
+                alert('Ошибка получения ника');
             }
         }
 
+        // Подключиться к WebSocket и начать Quick Game
         function startQuickGame() {
             if (!playerId) {
                 alert('Сначала получи ник!');
@@ -489,7 +199,7 @@
             conn = new WebSocket(wsUrl);
             
             conn.onopen = () => {
-                console.log('✅ WebSocket подключен');
+                console.log('WebSocket подключен');
                 document.getElementById('gameStatus').textContent = '⏳ Ищу соперника...';
                 
                 const message = {
@@ -502,35 +212,40 @@
             
             conn.onmessage = (event) => {
                 const data = JSON.parse(event.data);
-                console.log('Получено:', data);
+                console.log('Получено сообщение:', data);
                 
                 if (data.gameId && data.enemy) {
-                    gameId = data.gameId;
-                    yourSymbol = data.yourSymbol;
-                    enemyName = data.enemy.Name;
-                    
-                    document.getElementById('playerSymbol').textContent = yourSymbol;
-                    document.getElementById('playerName').textContent = nickname;
-                    document.getElementById('enemySymbol').textContent = data.enemy.Symbol;
-                    document.getElementById('enemyName').textContent = enemyName;
-                    
-                    showGameScreen();
-                } else if (data.gameId && data.grid) {
-                    board = data.grid.flat();
-                    updateBoard();
-                    currentTurn = data.currentTurn;
-                    updateTurnInfo();
-                    
-                    if (data.gameStatus === "finished" && data.winner) {
-                        showResultScreen(`🏆 Победил: ${data.winner}!`);
-                    } else if (data.gameStatus === "draw") {
-                        showResultScreen(`🎲 Ничья!`);
-                    }
-                }
+    // Матч найден!
+    gameId = data.gameId;
+    yourSymbol = data.yourSymbol;
+    enemyName = data.enemy.Name;
+    
+    // Показываем информацию на экране игры
+    document.getElementById('playerSymbol').textContent = yourSymbol;
+    document.getElementById('playerName').textContent = nickname;
+    document.getElementById('enemySymbol').textContent = data.enemy.Symbol;
+    document.getElementById('enemyName').textContent = enemyName;
+    
+    showGameScreen();
+} else if (data.gameId && data.grid) {
+    // Обновление доски!
+    board = data.grid.flat();
+    updateBoard();
+    currentTurn = data.currentTurn;
+    updateTurnInfo();
+
+     if (data.winner) {  // ← ДОБАВЬ ЭТО
+        document.getElementById('turnInfo').textContent = 
+            `🎉 Победил: ${data.winner}!`;
+    }else if (data.gameStatus === "draw") {
+    document.getElementById('turnInfo').textContent = `🎲 Ничья!`;
+}
+    
+}
             };
             
             conn.onerror = (error) => {
-                console.error('❌ WebSocket ошибка:', error);
+                console.error('WebSocket ошибка:', error);
                 document.getElementById('gameStatus').textContent = '❌ Ошибка соединения';
             };
             
@@ -539,51 +254,51 @@
             };
         }
 
+        // Показать экран игры
         function showGameScreen() {
             document.getElementById('mainMenu').style.display = 'none';
             document.getElementById('gameScreen').classList.add('active');
-            document.getElementById('resultScreen').classList.remove('active');
             resetBoard();
         }
 
-        function showResultScreen(message) {
-            document.getElementById('gameScreen').classList.remove('active');
-            document.getElementById('resultScreen').classList.add('active');
-            document.getElementById('resultMessage').textContent = message;
-        }
-
+        // Вернуться в меню
         function backToMenu() {
             document.getElementById('gameScreen').classList.remove('active');
-            document.getElementById('resultScreen').classList.remove('active');
             document.getElementById('mainMenu').style.display = 'block';
-            if (conn) conn.close();
+            if (conn) {
+                conn.close();
+            }
             resetBoard();
         }
 
-        function makeMove(index) {
-            if (board[index] === '') {
-                board[index] = yourSymbol;
-                updateBoard();
-                
-                let row = Math.floor(index / 3);
-                let col = index % 3;
-                
-                let moveMessage = {
-                    action: 'move',
-                    playerId: playerId,
-                    gameId: gameId,
-                    move: {
-                        row: row,
-                        col: col
-                    }
-                };
-                conn.send(JSON.stringify(moveMessage));
-                
-                currentTurn = currentTurn === 'X' ? 'O' : 'X';
-                updateTurnInfo();
+        // Сделать ход
+       function makeMove(index) {
+    if (board[index] === '') {
+        board[index] = yourSymbol;
+        updateBoard();
+        
+        // Конвертируем индекс в Row и Col
+        let row = Math.floor(index / 3);
+        let col = index % 3;
+        
+        // Отправляем ход на сервер
+        let moveMessage = {
+            action: 'move',
+            playerId: playerId,
+            gameId: gameId,  // ← ДОБАВЬ
+            move: {
+                row: row,
+                col: col
             }
-        }
+        };
+        conn.send(JSON.stringify(moveMessage));
+        
+        currentTurn = currentTurn === 'X' ? 'O' : 'X';
+        updateTurnInfo();
+    }
+}
 
+        // Обновить визуальное поле
         function updateBoard() {
             const cells = document.querySelectorAll('.cell');
             cells.forEach((cell, index) => {
@@ -597,6 +312,7 @@
             });
         }
 
+        // Обновить информацию о ходе
         function updateTurnInfo() {
             if (currentTurn === yourSymbol) {
                 document.getElementById('turnInfo').textContent = '✋ Твой ход';
@@ -605,13 +321,7 @@
             }
         }
 
-        function playAgain() {
-            document.getElementById('resultScreen').classList.remove('active');
-            document.getElementById('mainMenu').style.display = 'block';
-            resetBoard();
-            if (conn) conn.close();
-        }
-
+        // Сбросить доску
         function resetBoard() {
             board = ['', '', '', '', '', '', '', '', ''];
             currentTurn = 'X';
@@ -619,6 +329,7 @@
             updateTurnInfo();
         }
 
+        // Загружаем ник при загрузке страницы
         window.onload = () => {
             getNickname();
         };

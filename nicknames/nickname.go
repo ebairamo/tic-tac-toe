@@ -49,6 +49,9 @@ func GetRandomNickname(nickNames map[string]bool) (string, error) {
 	return nickName, nil
 }
 
-func ReleaseNickname() error {
+func ReleaseNickname(player1Nick string, player2Nick string) error {
+	AvailableNicknames[player1Nick] = true
+	AvailableNicknames[player2Nick] = true
+
 	return nil
 }
