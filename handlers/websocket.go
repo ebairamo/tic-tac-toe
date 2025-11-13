@@ -172,23 +172,23 @@ func SendBoardUpdate(gameId int, winner string, gameStatus string) error {
 
 	player1Conn, err := game.GetActiveConnection(thisGame.Player1.ID)
 	if err != nil {
-		fmt.Errorf("ошибка получения соединения первого игрока")
-		return err
+
+		return fmt.Errorf("ошибка получения соединения первого игрока")
 	}
 	player2Conn, err := game.GetActiveConnection(thisGame.Player2.ID)
 	if err != nil {
-		fmt.Errorf("ошибка получения соединения второго игрока")
-		return err
+
+		return fmt.Errorf("ошибка получения соединения второго игрока")
 	}
 	err = player1Conn.WriteJSON(BoardUpdate)
 	if err != nil {
-		fmt.Errorf("ошибка отправления Json первому игроку")
-		return err
+
+		return fmt.Errorf("ошибка отправления Json первому игроку")
 	}
 	err = player2Conn.WriteJSON(BoardUpdate)
 	if err != nil {
-		fmt.Errorf("ошибка отправления Json второму игроку")
-		return err
+
+		return fmt.Errorf("ошибка отправления Json второму игроку")
 	}
 	if BoardUpdate.GameStatus == "finished" || BoardUpdate.GameStatus == "draw" {
 
