@@ -7,6 +7,7 @@ import (
 	"tic/game"
 	"tic/models"
 	"tic/nicknames"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -32,104 +33,38 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("ошибка добавления активного соединения")
 		return
 	}
-	defer game.RemoveActiveConnection(playerId)
+
 	for {
 		var msg models.Message
 		err := conn.ReadJSON(&msg)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println(err, "1", &msg)
 			break
 		}
 		err = ProcessMessage(msg)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println(err, "2", &msg)
+			break
+		}
+		if msg.Action == "back_to_menu" {
+			fmt.Println("🏠 Игрок удаляется из меню")
+			game.RemoveActiveConnection(playerId)
 			break
 		}
 	}
+
 }
 
 func ProcessMessage(msg models.Message) error {
 
+	fmt.Println("📨 Получено:", msg.Action, "от", msg.PlayerId)
+	fmt.Println("   Полное сообщение:", msg)
+
 	if msg.Action == "quickgame" {
-		if _, exists := game.GameMemory.SearchingGamers[msg.PlayerId]; exists {
-			return fmt.Errorf("ты уже ищешь соперника")
-		}
 
-		gamer := models.Gamer{
-			ID:   msg.PlayerId,
-			Name: msg.Nickname,
-		}
-		game.GameMemory.SearchingGamers[msg.PlayerId] = gamer
-		if len(game.GameMemory.SearchingGamers) >= 2 {
-			var player1, player2 models.Gamer
-			var id1, id2 int
-			var count int
-			for id, gamer := range game.GameMemory.SearchingGamers {
-				if count == 0 {
-					player1 = gamer
-					id1 = id
-					player1.Symbol = "X"
-
-					count++
-
-				} else if count == 1 {
-					player2 = gamer
-					id2 = id
-					player2.Symbol = "O"
-					break
-				}
-
-			}
-			var matchedGame models.Game
-			var grid ([3][3]string)
-			gameId := game.GenerateGameID()
-			matchedGame = models.Game{
-				ID:      gameId,
-				Grid:    grid,
-				Player1: player1,
-				Player2: player2,
-			}
-			delete(game.GameMemory.SearchingGamers, id1)
-			delete(game.GameMemory.SearchingGamers, id2)
-			game.GameMemory.ActiveGames[gameId] = matchedGame
-			player1conn, err := game.GetActiveConnection(id1)
-			if err != nil {
-				fmt.Println("ошибка получения соединеня первого игрока")
-				return err
-			}
-			messagePlayer1 := models.MessageGameFound{
-				GameId:     gameId,
-				YourSymbol: "X",
-				Enemy: models.Gamer{
-					ID:     id2,
-					Name:   player2.Name,
-					Symbol: "O",
-				},
-			}
-			err = player1conn.WriteJSON(messagePlayer1)
-			if err != nil {
-				fmt.Println("ошибка отправки сообщения первому игроку")
-			}
-			player2conn, err := game.GetActiveConnection(id2)
-			if err != nil {
-				fmt.Println("ошибка получения соединеня второго игрока")
-				return err
-			}
-			messagePlayer2 := models.MessageGameFound{
-				GameId:     gameId,
-				YourSymbol: "O",
-				Enemy: models.Gamer{
-					ID:     id1,
-					Name:   player1.Name,
-					Symbol: "X",
-				},
-			}
-			err = player2conn.WriteJSON(messagePlayer2)
-			fmt.Println("✉️ Отправлено игроку 1 (ID:", id1, player1, ")")
-			fmt.Println("✉️ Отправлено игроку 2 (ID:", id2, player2, ")")
-			if err != nil {
-				fmt.Println("ошибка отправки сообщения второму игроку")
-			}
+		err := quickGameStart(msg)
+		if err != nil {
+			return err
 		}
 
 	} else if msg.Action == "move" {
@@ -146,7 +81,15 @@ func ProcessMessage(msg models.Message) error {
 		}
 		SendBoardUpdate(msg.GameId, winner, draw)
 		fmt.Println("🎮 Ход от игрока", msg.PlayerId, "на позицию", msg.Move.Row, msg.Move.Col)
+	} else if msg.Action == "back_to_menu" {
+		fmt.Println("🏠 BACK_TO_MENU ПОЛУЧЕНО!")
+	} else if msg.Action == "rematch" {
+		err := quickGameStart(msg)
+		if err != nil {
+			return err
+		}
 	}
+
 	fmt.Println("✅ ProcessMessage завершена успешно")
 	return nil
 }
@@ -192,8 +135,8 @@ func SendBoardUpdate(gameId int, winner string, gameStatus string) error {
 	}
 	if BoardUpdate.GameStatus == "finished" || BoardUpdate.GameStatus == "draw" {
 
-		player1Conn.Close()
-		player2Conn.Close()
+		time.Sleep(100 * time.Millisecond) // ← ДОБАВЬ ЭТО
+
 		delete(game.GameMemory.ActiveGames, gameId)
 		nicknames.ReleaseNickname(thisGame.Player1.Name, thisGame.Player2.Name)
 	}
@@ -235,4 +178,88 @@ func Draw(gameId int) string {
 		}
 	}
 	return "draw"
+}
+
+func quickGameStart(msg models.Message) error {
+	if _, exists := game.GameMemory.SearchingGamers[msg.PlayerId]; exists {
+		return fmt.Errorf("ты уже ищешь соперника")
+	}
+
+	gamer := models.Gamer{
+		ID:   msg.PlayerId,
+		Name: msg.Nickname,
+	}
+	game.GameMemory.SearchingGamers[msg.PlayerId] = gamer
+	if len(game.GameMemory.SearchingGamers) >= 2 {
+		var player1, player2 models.Gamer
+		var id1, id2 int
+		var count int
+		for id, gamer := range game.GameMemory.SearchingGamers {
+			if count == 0 {
+				player1 = gamer
+				id1 = id
+				player1.Symbol = "X"
+
+				count++
+
+			} else if count == 1 {
+				player2 = gamer
+				id2 = id
+				player2.Symbol = "O"
+				break
+			}
+
+		}
+		var matchedGame models.Game
+		var grid ([3][3]string)
+		gameId := game.GenerateGameID()
+		matchedGame = models.Game{
+			ID:      gameId,
+			Grid:    grid,
+			Player1: player1,
+			Player2: player2,
+		}
+		delete(game.GameMemory.SearchingGamers, id1)
+		delete(game.GameMemory.SearchingGamers, id2)
+		game.GameMemory.ActiveGames[gameId] = matchedGame
+		player1conn, err := game.GetActiveConnection(id1)
+		if err != nil {
+			fmt.Println("ошибка получения соединеня первого игрока")
+			return err
+		}
+		messagePlayer1 := models.MessageGameFound{
+			GameId:     gameId,
+			YourSymbol: "X",
+			Enemy: models.Gamer{
+				ID:     id2,
+				Name:   player2.Name,
+				Symbol: "O",
+			},
+		}
+		err = player1conn.WriteJSON(messagePlayer1)
+		if err != nil {
+			fmt.Println("ошибка отправки сообщения первому игроку")
+		}
+		player2conn, err := game.GetActiveConnection(id2)
+		if err != nil {
+			fmt.Println("ошибка получения соединеня второго игрока")
+			return err
+		}
+		messagePlayer2 := models.MessageGameFound{
+			GameId:     gameId,
+			YourSymbol: "O",
+			Enemy: models.Gamer{
+				ID:     id1,
+				Name:   player1.Name,
+				Symbol: "X",
+			},
+		}
+		err = player2conn.WriteJSON(messagePlayer2)
+		fmt.Println("✉️ Отправлено игроку 1 (ID:", id1, player1, messagePlayer2.Enemy, ")")
+		fmt.Println("✉️ Отправлено игроку 2 (ID:", id2, player2, messagePlayer1.Enemy, ")")
+		if err != nil {
+			fmt.Println("ошибка отправки сообщения второму игроку")
+		}
+	}
+	return nil
 }
