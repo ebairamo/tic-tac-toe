@@ -83,6 +83,36 @@ func ProcessMessage(msg models.Message) error {
 		fmt.Println("🎮 Ход от игрока", msg.PlayerId, "на позицию", msg.Move.Row, msg.Move.Col)
 	} else if msg.Action == "back_to_menu" {
 		fmt.Println("🏠 BACK_TO_MENU ПОЛУЧЕНО!")
+		var EnemyID int
+		var OpponentLeft bool
+
+		for _, value := range game.GameMemory.ActiveGames {
+			if value.Player1.ID == msg.PlayerId {
+				EnemyID = value.Player2.ID
+				OpponentLeft = true
+			} else if value.Player2.ID == msg.PlayerId {
+				EnemyID = value.Player1.ID
+				OpponentLeft = true
+			}
+
+		}
+		fmt.Println(EnemyID, msg.PlayerId, msg)
+		enemyConn, err := game.GetActiveConnection(EnemyID)
+		if err != nil {
+			return err
+		}
+
+		messageBackToMenu := models.MessageBackToMenu{
+			OpponentLeft: OpponentLeft,
+			Action:       msg.Action,
+		}
+		err = enemyConn.WriteJSON(messageBackToMenu)
+		if err != nil {
+			return err
+		}
+
+		delete(game.GameMemory.ActiveGames, msg.GameId)
+
 	} else if msg.Action == "rematch" {
 		err := quickGameStart(msg)
 		if err != nil {

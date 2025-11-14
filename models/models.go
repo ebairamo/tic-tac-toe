@@ -44,6 +44,10 @@ type MessageGameFound struct {
 	YourSymbol string `json:"yourSymbol"`
 	Enemy      Gamer  `json:"enemy"`
 }
+type MessageBackToMenu struct {
+	OpponentLeft bool   `json:"opponentLeft"`
+	Action       string `json:"action"`
+}
 
 type BoardUpdate struct {
 	GameId      int          `json:"gameId"`
