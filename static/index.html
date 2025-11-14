@@ -117,13 +117,18 @@
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
         }
 
-        button:hover {
+        button:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
         }
 
-        button:active {
+        button:active:not(:disabled) {
             transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
         #gameStatus {
@@ -207,12 +212,12 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
 
-        .cell:hover {
+        .cell:hover:not(:disabled) {
             transform: scale(1.05);
             background: #f0f4ff;
         }
 
-        .cell:active {
+        .cell:active:not(:disabled) {
             transform: scale(0.95);
         }
 
@@ -224,7 +229,7 @@
             color: #764ba2;
         }
 
-        #turnInfo {
+        #turnInfo, #offlineTurnInfo {
             text-align: center;
             font-size: 18px;
             font-weight: bold;
@@ -263,6 +268,21 @@
         .button-group button {
             flex: 1;
             margin: 0;
+        }
+
+        .offline-stats {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f4ff;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .offline-stats p {
+            margin: 8px 0;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
         }
 
         @media (max-width: 600px) {
@@ -316,11 +336,12 @@
             
             <button onclick="getNickname()">🔄 Новый ник</button>
             <button onclick="startQuickGame()">⚡ Быстрая игра</button>
+            <button onclick="startOfflineGame()">🎮 Офлайн игра</button>
             
             <div id="gameStatus"></div>
         </div>
 
-        <!-- Экран игры -->
+        <!-- Экран игры (онлайн) -->
         <div id="gameScreen" class="game-screen">
             <h2>🎮 Игра началась!</h2>
             
@@ -356,7 +377,7 @@
             <button onclick="backToMenu()">← Главное меню</button>
         </div>
 
-        <!-- Экран результата -->
+        <!-- Экран результата (онлайн) -->
         <div id="resultScreen" class="game-screen">
             <h2 id="resultTitle">🏆 Игра окончена!</h2>
             <div id="resultMessage"></div>
@@ -364,6 +385,47 @@
                 <button id="rematchBtn" onclick="playAgain()">🔄 Ещё раз</button>
                 <button onclick="backToMenu()">← Меню</button>
             </div>
+        </div>
+
+        <!-- Офлайн режим -->
+        <div id="offlineScreen" class="game-screen">
+            <h2>🎮 Офлайн Режим</h2>
+            
+            <div class="game-info">
+                <div class="player-info">
+                    <p>Игрок 1</p>
+                    <div class="symbol">X</div>
+                </div>
+                <div style="text-align: center; font-size: 24px; color: #667eea;">VS</div>
+                <div class="player-info">
+                    <p>Игрок 2</p>
+                    <div class="symbol">O</div>
+                </div>
+            </div>
+
+            <div style="text-align: center;">
+                <div class="board" id="offlineBoard">
+                    <button class="cell" onclick="makeOfflineMove(0)"></button>
+                    <button class="cell" onclick="makeOfflineMove(1)"></button>
+                    <button class="cell" onclick="makeOfflineMove(2)"></button>
+                    <button class="cell" onclick="makeOfflineMove(3)"></button>
+                    <button class="cell" onclick="makeOfflineMove(4)"></button>
+                    <button class="cell" onclick="makeOfflineMove(5)"></button>
+                    <button class="cell" onclick="makeOfflineMove(6)"></button>
+                    <button class="cell" onclick="makeOfflineMove(7)"></button>
+                    <button class="cell" onclick="makeOfflineMove(8)"></button>
+                </div>
+            </div>
+
+            <div id="offlineTurnInfo">Ход Игрока 1: X</div>
+            
+            <div class="offline-stats">
+                <p>📊 Побед Игрока 1: <strong id="player1Wins">0</strong></p>
+                <p>📊 Побед Игрока 2: <strong id="player2Wins">0</strong></p>
+                <p>🎲 Ничьих: <strong id="drawCount">0</strong></p>
+            </div>
+            
+            <button onclick="backToMainMenuOffline()">← Главное меню</button>
         </div>
     </div>
 
@@ -376,6 +438,17 @@
         let gameId = null;
         let board = ['', '', '', '', '', '', '', '', ''];
         let currentTurn = 'X';
+
+        // Offline variables
+        let offlineBoard = ['', '', '', '', '', '', '', '', ''];
+        let offlineCurrentPlayer = 1;
+        let offlineGameActive = true;
+
+        let offlineStats = {
+            player1Wins: localStorage.getItem('offline_p1_wins') ? parseInt(localStorage.getItem('offline_p1_wins')) : 0,
+            player2Wins: localStorage.getItem('offline_p2_wins') ? parseInt(localStorage.getItem('offline_p2_wins')) : 0,
+            draws: localStorage.getItem('offline_draws') ? parseInt(localStorage.getItem('offline_draws')) : 0
+        };
 
         async function getNickname() {
             try {
@@ -422,9 +495,10 @@
                 
                 if (data.gameId && data.enemy) {
                     const btn = document.getElementById('rematchBtn');
-    btn.disabled = false;
-    btn.textContent = '🔄 Ещё раз';
-    btn.style.opacity = '1';
+                    btn.disabled = false;
+                    btn.textContent = '🔄 Ещё раз';
+                    btn.style.opacity = '1';
+                    
                     gameId = data.gameId;
                     yourSymbol = data.yourSymbol;
                     enemyName = data.enemy.Name;
@@ -446,25 +520,20 @@
                     } else if (data.gameStatus === "draw") {
                         showResultScreen(`🎲 Ничья!`);
                     }
-                } else if (data.opponentLeft) {
-    // Противник ушёл!
-    document.getElementById('turnInfo').textContent = '❌ Противник покинул игру';
-    
-    // Блокируем все клетки
-    document.querySelectorAll('.cell').forEach(cell => {
-        cell.onclick = null;
-        cell.style.cursor = 'default';
-        cell.style.opacity = '0.5';
-    });
-    
-    // Показываем кнопку "Вернуться в меню"
-    // (или через 2 секунды автоматически вернуть?)
-}
+                } else if (data.action === "back_to_menu") {
+                    document.getElementById('turnInfo').textContent = '❌ Противник покинул игру';
+                    
+                    document.querySelectorAll('#board .cell').forEach(cell => {
+                        cell.onclick = null;
+                        cell.style.cursor = 'default';
+                        cell.style.opacity = '0.5';
+                    });
+                }
             };
             
-conn.onerror = (error) => {
-    console.log('WebSocket:', error);
-};
+            conn.onerror = (error) => {
+                console.log('WebSocket:', error);
+            };
             
             conn.onclose = () => {
                 console.log('WebSocket закрыт');
@@ -474,44 +543,41 @@ conn.onerror = (error) => {
         function showGameScreen() {
             document.getElementById('mainMenu').style.display = 'none';
             document.getElementById('gameScreen').classList.add('active');
+            document.getElementById('offlineScreen').classList.remove('active');
             document.getElementById('resultScreen').classList.remove('active');
             resetBoard();
         }
 
         function showResultScreen(message) {
-    document.getElementById('gameScreen').classList.remove('active');
-    document.getElementById('resultScreen').classList.add('active');
-    document.getElementById('resultMessage').textContent = message;
-    
-    // Блокируем все клетки
-    document.querySelectorAll('.cell').forEach(cell => {
-        cell.onclick = null;
-        cell.style.cursor = 'default';
-        cell.style.opacity = '0.5';
-    });
-    
-    
-}
+            document.getElementById('gameScreen').classList.remove('active');
+            document.getElementById('resultScreen').classList.add('active');
+            document.getElementById('resultMessage').textContent = message;
+            
+            document.querySelectorAll('#board .cell').forEach(cell => {
+                cell.onclick = null;
+                cell.style.cursor = 'default';
+                cell.style.opacity = '0.5';
+            });
+        }
 
-function backToMenu() {
-
-    console.log('backToMenu нажата');  // ← ДОБАВЬ ЭТО
-    if (conn && conn.readyState === WebSocket.OPEN) {
-        console.log('backToMenu нажата');  // ← ДОБАВЬ ЭТО
-        const menuMessage = {
-            action: 'back_to_menu',
-            playerId: playerId
-        };
-        conn.send(JSON.stringify(menuMessage));
-        setTimeout(() => {
-            conn.close();
-        }, 100);
-    }
-    document.getElementById('gameScreen').classList.remove('active');
-    document.getElementById('resultScreen').classList.remove('active');
-    document.getElementById('mainMenu').style.display = 'block';
-    resetBoard();
-}
+        function backToMenu() {
+            console.log('backToMenu нажата');
+            if (conn && conn.readyState === WebSocket.OPEN) {
+                const menuMessage = {
+                    action: 'back_to_menu',
+                    playerId: playerId,
+                    nickname: nickname
+                };
+                conn.send(JSON.stringify(menuMessage));
+                setTimeout(() => {
+                    conn.close();
+                }, 100);
+            }
+            document.getElementById('gameScreen').classList.remove('active');
+            document.getElementById('resultScreen').classList.remove('active');
+            document.getElementById('mainMenu').style.display = 'block';
+            resetBoard();
+        }
 
         function makeMove(index) {
             if (board[index] === '') {
@@ -538,26 +604,25 @@ function backToMenu() {
         }
 
         function updateBoard() {
-    const cells = document.querySelectorAll('.cell');
-    cells.forEach((cell, index) => {
-        cell.textContent = board[index];
-        cell.classList.remove('x', 'o');
-        if (board[index] === 'X') {
-            cell.classList.add('x');
-        } else if (board[index] === 'O') {
-            cell.classList.add('o');
+            const cells = document.querySelectorAll('#board .cell');
+            cells.forEach((cell, index) => {
+                cell.textContent = board[index];
+                cell.classList.remove('x', 'o');
+                if (board[index] === 'X') {
+                    cell.classList.add('x');
+                } else if (board[index] === 'O') {
+                    cell.classList.add('o');
+                }
+                if (board[index] === '') {
+                    cell.onclick = function() { makeMove(index); };
+                    cell.style.cursor = 'pointer';
+                    cell.style.opacity = '1';
+                } else {
+                    cell.onclick = null;
+                    cell.style.opacity = '0.5';
+                }
+            });
         }
-        // ← Разблокируй клетку если пустая
-        if (board[index] === '') {
-            cell.onclick = function() { makeMove(index); };
-            cell.style.cursor = 'pointer';
-            cell.style.opacity = '1';
-        } else {
-            cell.onclick = null;
-            cell.style.opacity = '0.5';
-        }
-    });
-}
 
         function updateTurnInfo() {
             if (currentTurn === yourSymbol) {
@@ -567,30 +632,146 @@ function backToMenu() {
             }
         }
 
-function playAgain() {
-    const btn = document.getElementById('rematchBtn');
-    
-    if (conn && conn.readyState === WebSocket.OPEN) {
-        // Блокируем кнопку и меняем текст
-        btn.disabled = true;
-        btn.textContent = '⏳ Ищем противника...';
-        btn.style.opacity = '0.6';
-        
-        const rematchMessage = {
-            action: 'rematch',
-            playerId: playerId,
-            gameId: gameId,
-            nickname: nickname
-        };
-        conn.send(JSON.stringify(rematchMessage));
-    }
-}
+        function playAgain() {
+            const btn = document.getElementById('rematchBtn');
+            
+            if (conn && conn.readyState === WebSocket.OPEN) {
+                btn.disabled = true;
+                btn.textContent = '⏳ Ищем противника...';
+                btn.style.opacity = '0.6';
+                
+                const rematchMessage = {
+                    action: 'rematch',
+                    playerId: playerId,
+                    gameId: gameId,
+                    nickname: nickname
+                };
+                conn.send(JSON.stringify(rematchMessage));
+            }
+        }
 
         function resetBoard() {
             board = ['', '', '', '', '', '', '', '', ''];
             currentTurn = 'X';
             updateBoard();
             updateTurnInfo();
+        }
+
+        // OFFLINE FUNCTIONS
+        function startOfflineGame() {
+            document.getElementById('mainMenu').style.display = 'none';
+            document.getElementById('offlineScreen').classList.add('active');
+            resetOfflineGame();
+            updateOfflineStats();
+        }
+
+        function resetOfflineGame() {
+            offlineBoard = ['', '', '', '', '', '', '', '', ''];
+            offlineCurrentPlayer = 1;
+            offlineGameActive = true;
+            updateOfflineBoard();
+            updateOfflineTurnInfo();
+            
+            document.querySelectorAll('#offlineBoard .cell').forEach(cell => {
+                cell.onclick = function() { 
+                    makeOfflineMove(Array.from(document.querySelectorAll('#offlineBoard .cell')).indexOf(cell)); 
+                };
+                cell.style.cursor = 'pointer';
+                cell.style.opacity = '1';
+            });
+        }
+
+        function makeOfflineMove(index) {
+            if (offlineBoard[index] === '' && offlineGameActive) {
+                const symbol = offlineCurrentPlayer === 1 ? 'X' : 'O';
+                offlineBoard[index] = symbol;
+                updateOfflineBoard();
+                
+                const winner = checkOfflineWin();
+                if (winner) {
+                    endOfflineGame(`Игрок ${winner} победил!`, winner);
+                    return;
+                }
+                
+                if (checkOfflineDraw()) {
+                    endOfflineGame('Ничья!', 0);
+                    return;
+                }
+                
+                offlineCurrentPlayer = offlineCurrentPlayer === 1 ? 2 : 1;
+                updateOfflineTurnInfo();
+            }
+        }
+
+        function updateOfflineBoard() {
+            const cells = document.querySelectorAll('#offlineBoard .cell');
+            cells.forEach((cell, index) => {
+                cell.textContent = offlineBoard[index];
+                cell.classList.remove('x', 'o');
+                if (offlineBoard[index] === 'X') {
+                    cell.classList.add('x');
+                } else if (offlineBoard[index] === 'O') {
+                    cell.classList.add('o');
+                }
+            });
+        }
+
+        function updateOfflineTurnInfo() {
+            const symbol = offlineCurrentPlayer === 1 ? 'X' : 'O';
+            document.getElementById('offlineTurnInfo').textContent = `Ход Игрока ${offlineCurrentPlayer}: ${symbol}`;
+        }
+
+        function checkOfflineWin() {
+            const patterns = [
+                [0,1,2], [3,4,5], [6,7,8],
+                [0,3,6], [1,4,7], [2,5,8],
+                [0,4,8], [2,4,6]
+            ];
+            
+            for (let pattern of patterns) {
+                const [a, b, c] = pattern;
+                if (offlineBoard[a] !== '' && offlineBoard[a] === offlineBoard[b] && offlineBoard[b] === offlineBoard[c]) {
+                    return offlineBoard[a] === 'X' ? 1 : 2;
+                }
+            }
+            return null;
+        }
+
+        function checkOfflineDraw() {
+            return offlineBoard.every(cell => cell !== '');
+        }
+
+        function endOfflineGame(message, winner) {
+            offlineGameActive = false;
+            document.getElementById('offlineTurnInfo').textContent = message;
+            
+            if (winner === 1) {
+                offlineStats.player1Wins++;
+                localStorage.setItem('offline_p1_wins', offlineStats.player1Wins);
+            } else if (winner === 2) {
+                offlineStats.player2Wins++;
+                localStorage.setItem('offline_p2_wins', offlineStats.player2Wins);
+            } else {
+                offlineStats.draws++;
+                localStorage.setItem('offline_draws', offlineStats.draws);
+            }
+            
+            updateOfflineStats();
+            
+            setTimeout(() => {
+                resetOfflineGame();
+            }, 2000);
+        }
+
+        function updateOfflineStats() {
+            document.getElementById('player1Wins').textContent = offlineStats.player1Wins;
+            document.getElementById('player2Wins').textContent = offlineStats.player2Wins;
+            document.getElementById('drawCount').textContent = offlineStats.draws;
+        }
+
+        function backToMainMenuOffline() {
+            document.getElementById('offlineScreen').classList.remove('active');
+            document.getElementById('mainMenu').style.display = 'block';
         }
 
         window.onload = () => {
