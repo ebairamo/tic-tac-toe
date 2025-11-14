@@ -446,16 +446,19 @@
                     } else if (data.gameStatus === "draw") {
                         showResultScreen(`🎲 Ничья!`);
                     }
-                }else if (data.opponentLeft) {
+                } else if (data.opponentLeft) {
     // Противник ушёл!
     document.getElementById('turnInfo').textContent = '❌ Противник покинул игру';
     
-    // Блокируем все кнопки
+    // Блокируем все клетки
     document.querySelectorAll('.cell').forEach(cell => {
         cell.onclick = null;
         cell.style.cursor = 'default';
         cell.style.opacity = '0.5';
     });
+    
+    // Показываем кнопку "Вернуться в меню"
+    // (или через 2 секунды автоматически вернуть?)
 }
             };
             
