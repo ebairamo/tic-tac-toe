@@ -56,3 +56,8 @@ type BoardUpdate struct {
 	GameStatus  string       `json:"gameStatus"`
 	Winner      string       `json:"winner,omitempty"`
 }
+
+type MessageStats struct {
+	PlayerOnline int `json:"playerOnline"`
+	GamesOnline  int `json:"gamesOnline"`
+}

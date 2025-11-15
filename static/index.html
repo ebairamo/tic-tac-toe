@@ -462,11 +462,18 @@
                 document.getElementById('nickname').textContent = nickname;
                 document.getElementById('usersOnline').textContent = data.usersOnline;
                 document.getElementById('gamesOnline').textContent = data.gamesOnline;
+                startStatsPolling();
             } catch (error) {
                 console.error('Ошибка:', error);
                 alert('❌ Ошибка получения ника');
             }
         }
+
+        function startStatsPolling() {
+    setInterval(updateStats, 60000); // каждую минуту
+}
+
+
 
         function startQuickGame() {
             if (!playerId) {
@@ -547,6 +554,26 @@
             document.getElementById('resultScreen').classList.remove('active');
             resetBoard();
         }
+
+     async function updateStats() {
+    try {
+        const response = await fetch('/api/stats');
+        const data = await response.json();
+        
+        console.log('Данные:', data);
+        console.log('Элемент usersOnline:', document.getElementById('usersOnline'));
+        console.log('Элемент gamesOnline:', document.getElementById('gamesOnline'));
+        
+        const userEl = document.getElementById('usersOnline');
+        const gameEl = document.getElementById('gamesOnline');
+        
+        if (userEl) userEl.textContent = data.playerOnline;
+        if (gameEl) gameEl.textContent = data.gamesOnline;
+        
+    } catch (error) {
+        console.error('Ошибка:', error);
+    }
+}
 
         function showResultScreen(message) {
             document.getElementById('gameScreen').classList.remove('active');

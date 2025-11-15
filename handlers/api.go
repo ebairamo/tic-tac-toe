@@ -30,3 +30,19 @@ func HandleGetNickname(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(ResponseNickname)
 }
+
+func HandleGetStats(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Метод запрещен", http.StatusMethodNotAllowed)
+		return
+	}
+
+	onlineGamers := (len(game.GameMemory.ActiveGames) * 2) + len(game.GameMemory.SearchingGamers)
+	activeGames := len(game.GameMemory.ActiveGames)
+	messageStats := models.MessageStats{
+		PlayerOnline: onlineGamers,
+		GamesOnline:  activeGames,
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	json.NewEncoder(w).Encode(messageStats)
+}
